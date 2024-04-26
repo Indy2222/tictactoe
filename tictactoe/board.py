@@ -10,24 +10,36 @@ class Board:
         self._positions = [0] * num_positions
 
     def set_position(self, x: int, y: int, player: int):
-        # TODO extend board if out of range
-        x_offset, y_offset = self._to_offsets(x, y)
+        # TODO
+        # 1) am I outside of the board?
+        # 2) calculate new mins and width/height
+        # 3) call _reinit_positions()
+        # 4) assign to the board
 
-        if x_offset < 0:
-            min_x = x - 10
-            x_shift = min_x - self._min_x
-            width = abs(x_shift) + self._width
-            positions = [0] * (width * self._height)
+    def _reinit_positions(self, min_x: int, min_y: int, width: int, height: int):
+        # TODO better names
+        old_max_x = (self._min_x + self._width)
+        new_max_x = (min_x + width)
+        old_max_y = (self._min_y + self._height)
+        new_max_y = (min_y + height)
 
-            for i in range(len(self._positions)):
-                x = i // self._width + x_shift
-                y = i - (i // self._width)
-                index = y * width + x
-                positions[index] = self._positions[i]
+        shrink_left = min_x > self._min_x
+        shrink_up = min_y > self._min_y
+        shrink_right = old_max_x < new_max_x
+        shrink_bottom = old_max_y < new_max_y
 
-            self._positions = positions
+        if shrink_left or shrink_up or shrink_right or shrink_bottom:
+            raise Exception('Cannot shrink the board')
 
-        # TODO set the position
+        positions = [0] * (width * height)
+
+        for dy in range(self._height):
+            new_offset_y = (min_y - self._min_y) + dy
+            new_index = new_offset_y * width + (min_x - self._min_x)
+            old_index = dy * self._width
+            positions[new_index:new_index + self._width] = self._positions[old_index:old_index + self._width]
+
+        self._positions = positions
 
     def get_range(self, x: int, y: int, width: int, height: int):
         result = []
