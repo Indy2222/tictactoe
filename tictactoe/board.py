@@ -1,3 +1,7 @@
+class OutOfBounds(ValueError):
+    pass
+
+
 class Board:
 
     def __init__(self):
@@ -10,11 +14,22 @@ class Board:
         self._positions = [0] * num_positions
 
     def set_position(self, x: int, y: int, player: int):
-        # TODO
-        # 1) am I outside of the board?
-        # 2) calculate new mins and width/height
-        # 3) call _reinit_positions()
-        # 4) assign to the board
+        offset_x, offset_y = self._to_offsets(x, y)
+
+        out_mins = offset_x < 0 or offset_y < 0
+        out_maxs = offset_x >= self._width or offset_y >= self._height
+        if out_mins or out_maxs:
+            min_x = min(self._min_x, x - 10)
+            min_y = min(self._min_y, y - 10)
+            # TODO better names
+            max_x = max(self._min_x + self._width, x + 10)
+            max_y = max(self._min_y + self._height, y + 10)
+            width = max_x - min_x
+            height = max_y - min_y
+            self._reinit_positions(min_x, min_y, width, height)
+
+        index = self._to_index(x, y)
+        self._positions[index] = player
 
     def _reinit_positions(self, min_x: int, min_y: int, width: int, height: int):
         # TODO better names
@@ -51,20 +66,27 @@ class Board:
         return result
 
     def get_position(self, x: int, y: int) -> int:
+        try:
+            index = self._to_index(x, y)
+        except OutOfBounds:
+            return 0
+
+        return self._positions[index]
+
+    def _to_index(self, x: int, y: int) -> int:
         x_offset, y_offset = self._to_offsets(x, y)
 
         if x_offset < 0:
-            return 0
+            raise OutOfBounds()
         if x_offset >= self._width:
-            return 0
+            raise OutOfBounds()
 
         if y_offset < 0:
-            return 0
+            raise OutOfBounds()
         if y_offset >= self._height:
-            return 0
+            raise OutOfBounds()
 
-        index = y_offset * self._width + x_offset
-        return self._positions[index]
+        return y_offset * self._width + x_offset
 
     def _to_offsets(self, x: int, y: int):
         return (x - self._min_x, y - self._min_y)
