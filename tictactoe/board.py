@@ -1,5 +1,13 @@
+from enum import Enum
+
+
 class OutOfBounds(ValueError):
     pass
+
+
+class Player(Enum):
+    PLAYER_1 = 1
+    PLAYER_2 = 2
 
 
 class Board:
@@ -11,9 +19,9 @@ class Board:
         self._width = 11
 
         num_positions = self._width * self._height
-        self._positions = [0] * num_positions
+        self._positions = [None] * num_positions
 
-    def set_position(self, x: int, y: int, player: int):
+    def set_position(self, x: int, y: int, player: Player):
         offset_x, offset_y = self._to_offsets(x, y)
 
         out_mins = offset_x < 0 or offset_y < 0
@@ -29,9 +37,15 @@ class Board:
             self._reinit_positions(min_x, min_y, width, height)
 
         index = self._to_index(x, y)
-        self._positions[index] = player
+        self._positions[index] = player.value
 
-    def _reinit_positions(self, min_x: int, min_y: int, width: int, height: int):
+    def _reinit_positions(
+        self,
+        min_x: int,
+        min_y: int,
+        width: int,
+        height: int
+    ):
         # TODO better names
         old_max_x = (self._min_x + self._width)
         new_max_x = (min_x + width)
@@ -46,7 +60,7 @@ class Board:
         if shrink_left or shrink_up or shrink_right or shrink_bottom:
             raise Exception('Cannot shrink the board')
 
-        positions = [0] * (width * height)
+        positions = [None] * (width * height)
 
         for dy in range(self._height):
             new_offset_y = (self._min_y - min_y) + dy
@@ -69,13 +83,17 @@ class Board:
             result.append(row)
         return result
 
-    def get_position(self, x: int, y: int) -> int:
+    def get_position(self, x: int, y: int) -> None | Player:
         try:
             index = self._to_index(x, y)
         except OutOfBounds:
-            return 0
+            return None
 
-        return self._positions[index]
+        value = self._positions[index]
+        if value is None:
+            return None
+
+        return Player(value)
 
     def _to_index(self, x: int, y: int) -> int:
         x_offset, y_offset = self._to_offsets(x, y)
