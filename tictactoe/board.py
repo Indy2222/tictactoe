@@ -40,8 +40,8 @@ class Board:
 
         shrink_left = min_x > self._min_x
         shrink_up = min_y > self._min_y
-        shrink_right = old_max_x < new_max_x
-        shrink_bottom = old_max_y < new_max_y
+        shrink_right = old_max_x > new_max_x
+        shrink_bottom = old_max_y > new_max_y
 
         if shrink_left or shrink_up or shrink_right or shrink_bottom:
             raise Exception('Cannot shrink the board')
@@ -49,11 +49,15 @@ class Board:
         positions = [0] * (width * height)
 
         for dy in range(self._height):
-            new_offset_y = (min_y - self._min_y) + dy
-            new_index = new_offset_y * width + (min_x - self._min_x)
+            new_offset_y = (self._min_y - min_y) + dy
+            new_index = new_offset_y * width + (self._min_x - min_x)
             old_index = dy * self._width
             positions[new_index:new_index + self._width] = self._positions[old_index:old_index + self._width]
 
+        self._min_x = min_x
+        self._min_y = min_y
+        self._width = width
+        self._height = height
         self._positions = positions
 
     def get_range(self, x: int, y: int, width: int, height: int):
