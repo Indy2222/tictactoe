@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "tictactoe"
+version = "0.1.0"
+description = "Command line tic tac toe game."
+authors = ["Martin Indra"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
