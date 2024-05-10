@@ -11,6 +11,12 @@ class Player(Enum):
 
 
 class Board:
+    """Virtually infinite game board.
+
+    Internally, it stores a finite rectangle which fully contains all played
+    positions. Positoins outside of the internally stored rectangle could be
+    queried.
+    """
 
     def __init__(self):
         self._min_x = -5
@@ -22,6 +28,12 @@ class Board:
         self._positions = [None] * num_positions
 
     def set_position(self, x: int, y: int, player: Player):
+        """Play to a position. If the position was already played, the method
+        replaces the old value with the new value (player).
+
+        Note that the internal rectancle of sotred positions is automatically
+        enlarged to encopass the new position (if required).
+        """
         offset_x, offset_y = self._to_offsets(x, y)
 
         out_mins = offset_x < 0 or offset_y < 0
@@ -45,7 +57,22 @@ class Board:
         min_y: int,
         width: int,
         height: int
-    ):
+    ) -> None:
+        """Reinitializes the list of possitions. It creates a new list with no
+        position played and then copies old positions to it.
+
+        Beware that the (virtual) rectangle of the new positions must fully
+        contain the old rectangle.
+
+        :param min_x: new minimum stored X coordinate. It must be lower or
+            equal to current min X.
+        :param min_y: new minimum stored Y coordinate. It must be lower or
+            equal to current min Y.
+        :param width: width of the new (virtual) rectangle. New min_x + width
+            must be larger or equal to old min_x _ width.
+        :param width: height of the new (virtual) rectangle. New min_y + height
+            must be larger or equal to old min_y + height.
+        """
         # TODO better names
         old_max_x = (self._min_x + self._width)
         new_max_x = (min_x + width)
@@ -74,7 +101,15 @@ class Board:
         self._height = height
         self._positions = positions
 
-    def get_range(self, x: int, y: int, width: int, height: int):
+    def get_range(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int
+    ) -> list[list[Player | None]]:
+        """Returns cut-out from the board as a 2D list (rows, columns). It is
+        possible to request any rectangle as if the board is infinite."""
         result = []
         for dy in range(height):
             row = []
@@ -84,6 +119,8 @@ class Board:
         return result
 
     def get_position(self, x: int, y: int) -> None | Player:
+        """Returns a single position from the board. It is possible to request
+        any position as if the boad was infinite."""
         try:
             index = self._to_index(x, y)
         except OutOfBounds:
