@@ -1,23 +1,29 @@
 import time
 from tictactoe.board import Board
 from tictactoe.player import Player
-from tictactoe import tui
+from tictactoe.tui import Tui, Interaction
 
 
 def main():
     board = Board()
+    tui = Tui()
 
     while True:
-        # TODO: read input from the user
+        interaction = tui.read()
+        if interaction is None:
+            continue
+
+        # TODO handle the input
         # TODO: process the input
 
-        print_output(board)
-        time.sleep(1)
+        print_output(tui, board)
+
+        # TODO: detect game end
 
 
-def print_output(board: Board):
-    width, height = tui.screen_size()
-    tui.print_board(board.get_range(0, 0, width, height))
+def print_output(tui: Tui, board: Board):
+    width, height = tui.size()
+    tui.print(board.get_range(0, 0, width, height))
 
 
 if __name__ == '__main__':
