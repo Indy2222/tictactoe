@@ -1,13 +1,8 @@
-from enum import Enum
+from tictactoe.player import Player
 
 
 class OutOfBounds(ValueError):
     pass
-
-
-class Player(Enum):
-    PLAYER_1 = 1
-    PLAYER_2 = 2
 
 
 class Board:
