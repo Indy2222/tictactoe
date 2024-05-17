@@ -1,13 +1,23 @@
+import time
+from tictactoe.board import Board
 from tictactoe.player import Player
-from tictactoe.tui import print_board
+from tictactoe import tui
 
 
 def main():
-    print_board([
-        [None, None, Player.PLAYER_1],
-        [None, None, Player.PLAYER_1],
-        [Player.PLAYER_2, None, Player.PLAYER_2]
-    ])
+    board = Board()
+
+    while True:
+        # TODO: read input from the user
+        # TODO: process the input
+
+        print_output(board)
+        time.sleep(1)
+
+
+def print_output(board: Board):
+    width, height = tui.screen_size()
+    tui.print_board(board.get_range(0, 0, width, height))
 
 
 if __name__ == '__main__':
