@@ -48,5 +48,3 @@ def _clear_screen():
     print("\033[2J", end='')
     # \033[H - moves cursor to the top-left corner
     print("\033[H", end='')
-
-
