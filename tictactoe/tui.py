@@ -1,50 +1,92 @@
-import shutil
+import curses
+from enum import Enum
 from tictactoe.player import Player
 
 _PLAYER_1_CHAR = 'x'
 _PLAYER_2_CHAR = 'o'
 
 
-def screen_size() -> tuple[int, int]:
-    """Returns number of positions to be printed to the screen (widht, height).
-    """
-    cols, rows = shutil.get_terminal_size(fallback=(10, 10))
-    return (cols - 1) // 4, (rows - 1) // 2
+class Interaction(Enum):
+    MOVE_UP = 1
+    MOVE_DOWN = 2
+    MOVE_LEFT = 3
+    MOVE_RIGHT = 4
+    PLAY = 5
 
 
-def print_board(board: list[list[None | Player]]):
-    _clear_screen()
+def setup(func, *args, **kwargs):
+    def wrapper(window, *args, **kwargs):
+        curses.curs_set(0)
+        func(Tui(window), *args, **kwargs)
 
-    for row in board:
-        _print_row(row)
-
-    if board:  # do not crash on empty board
-        _print_hl(len(board[0]), end='')
+    curses.wrapper(wrapper, *args, **kwargs)
 
 
-def _print_row(row: list[None | Player]):
-    _print_hl(len(row))
+class Tui:
 
-    for player in row:
-        print('|', end='')
-        if player == Player.PLAYER_1:
-            print(' ' + _PLAYER_1_CHAR + ' ', end='')
-        elif player == Player.PLAYER_2:
-            print(' ' + _PLAYER_2_CHAR + ' ', end='')
-        else:
-            print('   ', end='')
+    def __init__(self, window: curses.window):
+        self._window = window
 
-    print('|')
+    def read(self) -> Interaction | None:
+        code = self._window.getch()
+
+        if code == curses.KEY_UP:
+            return Interaction.MOVE_UP
+        if code == curses.KEY_DOWN:
+            return Interaction.MOVE_DOWN
+        if code == curses.KEY_LEFT:
+            return Interaction.MOVE_LEFT
+        if code == curses.KEY_RIGHT:
+            return Interaction.MOVE_RIGHT
+        if code == curses.KEY_ENTER:
+            return Interaction.PLAY
+
+        return None
+
+    def size(self) -> tuple[int, int]:
+        """Returns number of positions to be printed to the screen (width,
+        height).
+        """
+        rows, cols = self._window.getmaxyx()
+        return (cols - 1) // 4, (rows - 1) // 2
+
+    def print(self, board: list[list[None | Player]]):
+        self._window.clear()
+
+        # keep the screen clear if the board is empty
+        if not board or not board[0]:
+            return
+
+        max_width, max_height = self.size()
+        if len(board) > max_height or len(board[0]) > max_width:
+            raise Exception('Cannot print the board, it is too large!')
+
+        for i, row in enumerate(board):
+            self._print_row(i, row)
+
+        self._print_hl(len(board) * 2, len(board[0]))
+
+        self._window.refresh()
 
 
-def _print_hl(width: int, end='\n'):
-    for _ in range(width):
-        print('+---', end='')
-    print('+', end=end, flush=True)
+    def _print_row(self, index: int, row: list[None | Player]):
+        self._print_hl(index * 2, len(row))
+
+        y = index * 2 + 1
+        for i, player in enumerate(row):
+            x = i * 4
+
+            self._window.addstr(y, x, '|')
+
+            if player == Player.PLAYER_1:
+                self._window.addstr(y, x + 2, _PLAYER_1_CHAR)
+            elif player == Player.PLAYER_2:
+                self._window.addstr(y, x + 2, _PLAYER_2_CHAR)
+
+        self._window.addstr(y, len(row) * 4, '|')
 
 
-def _clear_screen():
-    # Clear the screen
-    print("\033[2J", end='')
-    # \033[H - moves cursor to the top-left corner
-    print("\033[H", end='')
+    def _print_hl(self, y: int, width: int):
+        for i in range(width):
+            self._window.addstr(y, i * 4, '+---')
+        self._window.addstr(y, width * 4, '+')
