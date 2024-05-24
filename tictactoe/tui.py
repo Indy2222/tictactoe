@@ -17,6 +17,9 @@ class Interaction(Enum):
 def setup(func, *args, **kwargs):
     def wrapper(window, *args, **kwargs):
         curses.curs_set(0)
+        curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+
         func(Tui(window), *args, **kwargs)
 
     curses.wrapper(wrapper, *args, **kwargs)
@@ -52,7 +55,12 @@ class Tui:
         rows, cols = self._window.getmaxyx()
         return (cols - 1) // 4, (rows - 1) // 2
 
-    def print(self, board: list[list[None | Player]]):
+    def print(
+        self,
+        board: list[list[None | Player]],
+        player: Player,
+        allowed: bool,
+    ):
         self._window.clear()
 
         # keep the screen clear if the board is empty
@@ -68,8 +76,14 @@ class Tui:
 
         self._print_hl(len(board) * 2, len(board[0]))
 
+        self._print_position(player, allowed, max_width // 2, max_height // 2)
+
         self._window.refresh()
 
+    def _print_position(self, player: Player, allowed: bool, x, y):
+        player_char = _player_char(player)
+        attr = curses.color_pair(1 if allowed else 2)
+        self._window.addstr(y * 2 + 1, x * 4 + 2, player_char, attr)
 
     def _print_row(self, index: int, row: list[None | Player]):
         self._print_hl(index * 2, len(row))
@@ -80,15 +94,22 @@ class Tui:
 
             self._window.addstr(y, x, '|')
 
-            if player == Player.PLAYER_1:
-                self._window.addstr(y, x + 2, _PLAYER_1_CHAR)
-            elif player == Player.PLAYER_2:
-                self._window.addstr(y, x + 2, _PLAYER_2_CHAR)
+            if player is not None:
+                player_char = _player_char(player)
+                self._window.addstr(y, x + 2, player_char)
 
         self._window.addstr(y, len(row) * 4, '|')
-
 
     def _print_hl(self, y: int, width: int):
         for i in range(width):
             self._window.addstr(y, i * 4, '+---')
         self._window.addstr(y, width * 4, '+')
+
+
+def _player_char(player: Player):
+    if player == Player.PLAYER_1:
+        return _PLAYER_1_CHAR
+    elif player == Player.PLAYER_2:
+        return _PLAYER_2_CHAR
+
+    raise Exception('Unknown player.')

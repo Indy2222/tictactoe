@@ -43,8 +43,7 @@ class Game:
             self.play()
 
     def play(self):
-        current = self._board.get_position(self._x, self._y)
-        if current is not None:
+        if not self.is_position_empty():
             return
 
         self._board.set_position(self._x, self._y, self._player)
@@ -55,7 +54,17 @@ class Game:
         x = self._x - width // 2
         y = self._y - height // 2
         rect = self._board.get_range(x, y, width, height)
-        self._tui.print(rect)
+
+        is_empty = self.is_position_empty()
+        if is_empty:
+            player = self._player
+        else:
+            player = self._board.get_position(self._x, self._y)
+
+        self._tui.print(rect, player, self.is_position_empty())
+
+    def is_position_empty(self) -> bool:
+        return self._board.get_position(self._x, self._y) is None
 
 
 def start_game(tui: Tui, board: Board):
