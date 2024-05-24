@@ -38,7 +38,9 @@ class Tui:
             return Interaction.MOVE_LEFT
         if code == curses.KEY_RIGHT:
             return Interaction.MOVE_RIGHT
-        if code == curses.KEY_ENTER:
+
+        # letter 'p'
+        if code == 112:
             return Interaction.PLAY
 
         return None
