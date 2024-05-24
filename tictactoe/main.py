@@ -1,12 +1,16 @@
-import time
 from tictactoe.board import Board
 from tictactoe.player import Player
-from tictactoe.tui import Tui, Interaction
+from tictactoe import tui
 
 
 def main():
     board = Board()
-    tui = Tui()
+    tui.setup(game_loop, board=board)
+
+
+def game_loop(tui: tui.Tui, board: Board):
+    width, height = tui.size()
+    tui.print(board.get_range(0, 0, width, height))
 
     while True:
         interaction = tui.read()
@@ -16,14 +20,10 @@ def main():
         # TODO handle the input
         # TODO: process the input
 
-        print_output(tui, board)
+        width, height = tui.size()
+        tui.print(board.get_range(0, 0, width, height))
 
         # TODO: detect game end
-
-
-def print_output(tui: Tui, board: Board):
-    width, height = tui.size()
-    tui.print(board.get_range(0, 0, width, height))
 
 
 if __name__ == '__main__':
