@@ -1,5 +1,5 @@
-from enum import Enum
 import curses
+from enum import Enum
 from tictactoe.player import Player
 
 _PLAYER_1_CHAR = 'x'
@@ -16,6 +16,7 @@ class Interaction(Enum):
 
 def setup(func, *args, **kwargs):
     def wrapper(window, *args, **kwargs):
+        curses.curs_set(0)
         func(Tui(window), *args, **kwargs)
 
     curses.wrapper(wrapper, *args, **kwargs)
@@ -23,8 +24,7 @@ def setup(func, *args, **kwargs):
 
 class Tui:
 
-    def __init__(self, window):
-        curses.curs_set(0)
+    def __init__(self, window: curses.window):
         self._window = window
 
     def read(self) -> Interaction | None:
@@ -48,16 +48,23 @@ class Tui:
         height).
         """
         rows, cols = self._window.getmaxyx()
-        return (cols - 2) // 4, (rows - 2) // 2
+        return (cols - 1) // 4, (rows - 1) // 2
 
     def print(self, board: list[list[None | Player]]):
         self._window.clear()
 
+        # keep the screen clear if the board is empty
+        if not board or not board[0]:
+            return
+
+        max_width, max_height = self.size()
+        if len(board) > max_height or len(board[0]) > max_width:
+            raise Exception('Cannot print the board, it is too large!')
+
         for i, row in enumerate(board):
             self._print_row(i, row)
 
-        if board:  # do not crash on empty board
-            self._print_hl(len(board) * 2, len(board[0]))
+        self._print_hl(len(board) * 2, len(board[0]))
 
         self._window.refresh()
 
@@ -83,5 +90,3 @@ class Tui:
         for i in range(width):
             self._window.addstr(y, i * 4, '+---')
         self._window.addstr(y, width * 4, '+')
-
-

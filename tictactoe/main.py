@@ -1,30 +1,51 @@
 from tictactoe.board import Board
-from tictactoe.player import Player
 from tictactoe import tui
+from tictactoe.tui import Interaction, Tui
 
 
 def main():
     board = Board()
-    tui.setup(game_loop, board=board)
+    tui.setup(start_game, board=board)
 
 
-def game_loop(tui: tui.Tui, board: Board):
-    width, height = tui.size()
-    tui.print(board.get_range(0, 0, width, height))
+class Game:
 
-    while True:
-        interaction = tui.read()
-        if interaction is None:
-            continue
+    def __init__(self, tui: Tui, board: Board):
+        self._tui = tui
+        self._board = board
 
-        # TODO handle the input
-        # TODO: process the input
+        self._x = 0
+        self._y = 0
 
-        width, height = tui.size()
-        tui.print(board.get_range(0, 0, width, height))
+    def run(self):
+        self.refresh()
 
-        # TODO: detect game end
+        while True:
+            interaction = self._tui.read()
+            if interaction is None:
+                continue
+
+            self.handle_interaction(interaction)
+            self.refresh()
+
+    def handle_interaction(self, interaction: Interaction):
+        if interaction == Interaction.MOVE_UP:
+            self._y -= 1
+        elif interaction == Interaction.MOVE_DOWN:
+            self._y += 1
+        elif interaction == Interaction.MOVE_LEFT:
+            self._x -= 1
+        elif interaction == Interaction.MOVE_RIGHT:
+            self._x += 1
+
+    def refresh(self):
+        width, height = self._tui.size()
+        x = self._x - width // 2
+        y = self._y - height // 2
+        rect = self._board.get_range(x, y, width, height)
+        self._tui.print(rect)
 
 
-if __name__ == '__main__':
-    main()
+def start_game(tui: Tui, board: Board):
+    game = Game(tui, board)
+    game.run()
