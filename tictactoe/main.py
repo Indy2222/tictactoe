@@ -1,3 +1,4 @@
+from tictactoe.player import Player
 from tictactoe.board import Board
 from tictactoe import tui
 from tictactoe.tui import Interaction, Tui
@@ -16,6 +17,7 @@ class Game:
 
         self._x = 0
         self._y = 0
+        self._player = Player.PLAYER_1
 
     def run(self):
         self.refresh()
@@ -37,6 +39,16 @@ class Game:
             self._x -= 1
         elif interaction == Interaction.MOVE_RIGHT:
             self._x += 1
+        elif interaction == Interaction.PLAY:
+            self.play()
+
+    def play(self):
+        current = self._board.get_position(self._x, self._y)
+        if current is not None:
+            return
+
+        self._board.set_position(self._x, self._y, self._player)
+        self._player = self._player.invert()
 
     def refresh(self):
         width, height = self._tui.size()
