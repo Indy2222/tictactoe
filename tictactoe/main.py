@@ -21,6 +21,7 @@ class Game:
         self._x = 0
         self._y = 0
         self._player = Player.PLAYER_1
+        self._win_streak = None
 
     def run(self):
         self.refresh()
@@ -38,10 +39,9 @@ class Game:
         if interaction == Interaction.QUIT:
             return True
 
-        if interaction == Interaction.PLAY:
-            return self.play()
-
-        if interaction == Interaction.MOVE_UP:
+        if self._win_streak is None and interaction == Interaction.PLAY:
+            self.play()
+        elif interaction == Interaction.MOVE_UP:
             self._y -= 1
         elif interaction == Interaction.MOVE_DOWN:
             self._y += 1
@@ -52,46 +52,63 @@ class Game:
 
         return False
 
-    def play(self) -> bool:
+    def play(self):
         current = self._board.get_position(self._x, self._y)
         if current is not None:
             return False
 
         self._board.set_position(self._x, self._y, self._player)
         self._player = self._player.invert()
-        return self.detect_win_streak()
+        self._win_streak = self.detect_win_streak()
 
     def refresh(self):
         width, height = self._tui.size()
         rel_x, rel_y = width // 2, height // 2
 
-        x = self._x - rel_x
-        y = self._y - rel_y
-        rect = self._board.get_range(x, y, width, height)
+        corner_x = self._x - rel_x
+        corner_y = self._y - rel_y
+        rect = self._board.get_range(corner_x, corner_y, width, height)
 
-        player = self._board.get_position(self._x, self._y)
-        if player is None:
-            play_symbol = Symbol(
-                player=self._player,
-                style=Style.ALLOWED,
-                x=rel_x,
-                y=rel_y
-            )
+        extra_symbols = []
+
+        if self._win_streak is None:
+            player = self._board.get_position(self._x, self._y)
+            if player is None:
+                extra_symbols.append(Symbol(
+                    player=self._player,
+                    style=Style.ALLOWED,
+                    x=rel_x,
+                    y=rel_y
+                ))
+            else:
+                extra_symbols.append(Symbol(
+                    player=player,
+                    style=Style.FORBIDDEN,
+                    x=rel_x,
+                    y=rel_y
+                ))
         else:
-            play_symbol = Symbol(
-                player=player,
-                style=Style.FORBIDDEN,
-                x=rel_x,
-                y=rel_y
-            )
+            assert self._win_streak
 
-        self._tui.display(rect, [play_symbol])
+            first_x, first_y = self._win_streak[0]
+            player = self._board.get_position(first_x, first_y)
+            assert player is not None, (first_x, first_y)
 
-    def detect_win_streak(self) -> bool:
+            for x, y in self._win_streak:
+                extra_symbols.append(Symbol(
+                    player=player,
+                    style=Style.HIGHLIGHTED,
+                    x=x - corner_x,
+                    y=y - corner_y,
+                ))
+
+        self._tui.display(rect, extra_symbols)
+
+    def detect_win_streak(self) -> list[tuple[int, int]] | None:
         """Returns True if the given positoin is part of a winning streak."""
         player = self._board.get_position(self._x, self._y)
         if player is None:
-            return False
+            return None
 
         directions = [
             (1, 0),
@@ -101,16 +118,17 @@ class Game:
         ]
 
         for direction in directions:
-            if self.test_streak_dir(player, direction):
-                return True
+            win_streak = self.test_streak_dir(player, direction)
+            if win_streak:
+                return win_streak
 
-        return False
+        return None
 
     def test_streak_dir(
         self,
         player: Player,
         direction: tuple[int, int],
-    ) -> bool:
+    ) -> list[tuple[int, int]] | None:
         pos_x, pos_y = self._x, self._y
         dir_x, dir_y = direction
 
@@ -124,19 +142,19 @@ class Game:
         dir_x *= -1
         dir_y *= -1
 
-        count = 1
+        streak = [(pos_x, pos_y)]
         while True:
             pos_x += dir_x
             pos_y += dir_y
             pos_player = self._board.get_position(pos_x, pos_y)
             if pos_player != player:
                 break
-            count += 1
+            streak.append((pos_x, pos_y))
 
-        if count >= WIN_STREAK_LEN:
-            return True
+        if len(streak) >= WIN_STREAK_LEN:
+            return streak
 
-        return False
+        return None
 
 
 def start_game(tui: Tui, board: Board):
