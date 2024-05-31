@@ -55,7 +55,17 @@ class Game:
         x = self._x - width // 2
         y = self._y - height // 2
         rect = self._board.get_range(x, y, width, height)
-        self._tui.print(rect)
+
+        player = self._board.get_position(self._x, self._y)
+        allowed = False
+
+        if player is None:
+            player = self._player
+            allowed = True
+
+        player_pos = (width // 2, height // 2)
+
+        self._tui.print(rect, player, player_pos, allowed)
 
 
 def start_game(tui: Tui, board: Board):
