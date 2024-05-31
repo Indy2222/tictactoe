@@ -59,8 +59,17 @@ class Tui:
         self,
         board: list[list[None | Player]],
         player: Player,
+        player_pos: tuple[int, int],
         allowed: bool,
     ):
+        """
+        :param player: symbol of this player will be displayed at
+            :param player_pos: of the board in either "Ok" or "Not Allowed"
+            color. See :param allowed".
+        :param player_pos: relative position (from the top-left corner) of the
+            player symbol. See :param player:.
+        :param allowed: controls how :param player: is displayed.
+        """
         self._window.clear()
 
         # keep the screen clear if the board is empty
@@ -76,13 +85,19 @@ class Tui:
 
         self._print_hl(len(board) * 2, len(board[0]))
 
-        self._print_position(player, allowed, max_width // 2, max_height // 2)
+        self._print_position(player, player_pos, allowed)
 
         self._window.refresh()
 
-    def _print_position(self, player: Player, allowed: bool, x, y):
+    def _print_position(
+        self,
+        player: Player,
+        player_pos: tuple[int, int],
+        allowed: bool,
+    ):
         player_char = _player_char(player)
         attr = curses.color_pair(1 if allowed else 2)
+        x, y = player_pos
         self._window.addstr(y * 2 + 1, x * 4 + 2, player_char, attr)
 
     def _print_row(self, index: int, row: list[None | Player]):
