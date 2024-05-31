@@ -1,7 +1,7 @@
 from tictactoe.player import Player
 from tictactoe.board import Board
 from tictactoe import tui
-from tictactoe.tui import Interaction, Tui
+from tictactoe.tui import Interaction, Tui, Symbol, Style
 
 
 def main():
@@ -58,20 +58,29 @@ class Game:
 
     def refresh(self):
         width, height = self._tui.size()
-        x = self._x - width // 2
-        y = self._y - height // 2
+        rel_x, rel_y = width // 2, height // 2
+
+        x = self._x - rel_x
+        y = self._y - rel_y
         rect = self._board.get_range(x, y, width, height)
 
         player = self._board.get_position(self._x, self._y)
-        allowed = False
-
         if player is None:
-            player = self._player
-            allowed = True
+            play_symbol = Symbol(
+                player=self._player,
+                style=Style.ALLOWED,
+                x=rel_x,
+                y=rel_y
+            )
+        else:
+            play_symbol = Symbol(
+                player=player,
+                style=Style.FORBIDDEN,
+                x=rel_x,
+                y=rel_y
+            )
 
-        player_pos = (width // 2, height // 2)
-
-        self._tui.display(rect, player, player_pos, allowed)
+        self._tui.display(rect, [play_symbol])
 
 
 def start_game(tui: Tui, board: Board):
