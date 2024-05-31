@@ -55,14 +55,17 @@ class Tui:
         rows, cols = self._window.getmaxyx()
         return (cols - 1) // 4, (rows - 1) // 2
 
-    def print(
+    def display(
         self,
         board: list[list[None | Player]],
         player: Player,
         player_pos: tuple[int, int],
         allowed: bool,
     ):
-        """
+        """Re-display a rectangular cut off the board.
+
+        :param board: row major 2D array of board positions. The list dimension
+            must be smaller or equal to self.size().
         :param player: symbol of this player will be displayed at
             :param player_pos: of the board in either "Ok" or "Not Allowed"
             color. See :param allowed".
