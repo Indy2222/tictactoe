@@ -65,7 +65,7 @@ class Game:
 
         player_pos = (width // 2, height // 2)
 
-        self._tui.print(rect, player, player_pos, allowed)
+        self._tui.display(rect, player, player_pos, allowed)
 
 
 def start_game(tui: Tui, board: Board):
