@@ -22,15 +22,19 @@ class Game:
     def run(self):
         self.refresh()
 
-        while True:
+        should_quit = False
+        while not should_quit:
             interaction = self._tui.read()
             if interaction is None:
                 continue
 
-            self.handle_interaction(interaction)
+            should_quit = self.handle_interaction(interaction)
             self.refresh()
 
-    def handle_interaction(self, interaction: Interaction):
+    def handle_interaction(self, interaction: Interaction) -> bool:
+        if interaction == Interaction.QUIT:
+            return True
+
         if interaction == Interaction.MOVE_UP:
             self._y -= 1
         elif interaction == Interaction.MOVE_DOWN:
@@ -41,6 +45,8 @@ class Game:
             self._x += 1
         elif interaction == Interaction.PLAY:
             self.play()
+
+        return False
 
     def play(self):
         current = self._board.get_position(self._x, self._y)
