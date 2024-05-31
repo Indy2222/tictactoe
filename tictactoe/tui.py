@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import curses
 from enum import Enum
 from tictactoe.player import Player
@@ -15,11 +16,26 @@ class Interaction(Enum):
     QUIT = 6
 
 
+class Style(Enum):
+    ALLOWED = 1
+    FORBIDDEN = 2
+    HIGHLIGHTED = 3
+
+
+@dataclass
+class Symbol:
+    player: Player
+    style: Style
+    x: int
+    y: int
+
+
 def setup(func, *args, **kwargs):
     def wrapper(window, *args, **kwargs):
         curses.curs_set(0)
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
 
         func(Tui(window), *args, **kwargs)
 
@@ -63,20 +79,14 @@ class Tui:
     def display(
         self,
         board: list[list[None | Player]],
-        player: Player,
-        player_pos: tuple[int, int],
-        allowed: bool,
+        extra: list[Symbol],
     ):
         """Re-display a rectangular cut off the board.
 
         :param board: row major 2D array of board positions. The list dimension
             must be smaller or equal to self.size().
-        :param player: symbol of this player will be displayed at
-            :param player_pos: of the board in either "Ok" or "Not Allowed"
-            color. See :param allowed".
-        :param player_pos: relative position (from the top-left corner) of the
-            player symbol. See :param player:.
-        :param allowed: controls how :param player: is displayed.
+        :param extra: extra symbols displayed over the board. Note that the
+            symbol positions are relative to the top-left corner.
         """
         self._window.clear()
 
@@ -93,20 +103,20 @@ class Tui:
 
         self._print_hl(len(board) * 2, len(board[0]))
 
-        self._print_position(player, player_pos, allowed)
+        self._display_symbols(extra)
 
         self._window.refresh()
 
-    def _print_position(
-        self,
-        player: Player,
-        player_pos: tuple[int, int],
-        allowed: bool,
-    ):
-        player_char = _player_char(player)
-        attr = curses.color_pair(1 if allowed else 2)
-        x, y = player_pos
-        self._window.addstr(y * 2 + 1, x * 4 + 2, player_char, attr)
+    def _display_symbols(self, symbols: list[Symbol]):
+        for symbol in symbols:
+            player_char = _player_char(symbol.player)
+            attr = curses.color_pair(symbol.style.value)
+            self._window.addstr(
+                symbol.y * 2 + 1,
+                symbol.x * 4 + 2,
+                player_char,
+                attr,
+            )
 
     def _print_row(self, index: int, row: list[None | Player]):
         self._print_hl(index * 2, len(row))
