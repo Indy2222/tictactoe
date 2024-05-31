@@ -12,6 +12,7 @@ class Interaction(Enum):
     MOVE_LEFT = 3
     MOVE_RIGHT = 4
     PLAY = 5
+    QUIT = 6
 
 
 def setup(func, *args, **kwargs):
@@ -45,6 +46,10 @@ class Tui:
         # letter 'p'
         if code == 112:
             return Interaction.PLAY
+
+        # letter 'q'
+        if code == 113:
+            return Interaction.QUIT
 
         return None
 
