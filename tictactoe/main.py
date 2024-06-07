@@ -4,6 +4,9 @@ from tictactoe import tui
 from tictactoe.tui import Interaction, Tui, Symbol, Style
 
 
+WIN_STREAK_LEN = 5
+
+
 def main():
     board = Board()
     tui.setup(start_game, board=board)
@@ -35,6 +38,9 @@ class Game:
         if interaction == Interaction.QUIT:
             return True
 
+        if interaction == Interaction.PLAY:
+            return self.play()
+
         if interaction == Interaction.MOVE_UP:
             self._y -= 1
         elif interaction == Interaction.MOVE_DOWN:
@@ -43,18 +49,17 @@ class Game:
             self._x -= 1
         elif interaction == Interaction.MOVE_RIGHT:
             self._x += 1
-        elif interaction == Interaction.PLAY:
-            self.play()
 
         return False
 
-    def play(self):
+    def play(self) -> bool:
         current = self._board.get_position(self._x, self._y)
         if current is not None:
-            return
+            return False
 
         self._board.set_position(self._x, self._y, self._player)
         self._player = self._player.invert()
+        return self.detect_win_streak()
 
     def refresh(self):
         width, height = self._tui.size()
@@ -81,6 +86,57 @@ class Game:
             )
 
         self._tui.display(rect, [play_symbol])
+
+    def detect_win_streak(self) -> bool:
+        """Returns True if the given positoin is part of a winning streak."""
+        player = self._board.get_position(self._x, self._y)
+        if player is None:
+            return False
+
+        directions = [
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1)
+        ]
+
+        for direction in directions:
+            if self.test_streak_dir(player, direction):
+                return True
+
+        return False
+
+    def test_streak_dir(
+        self,
+        player: Player,
+        direction: tuple[int, int],
+    ) -> bool:
+        pos_x, pos_y = self._x, self._y
+        dir_x, dir_y = direction
+
+        while True:
+            next_pos_x, next_pos_y = pos_x + dir_x, pos_y + dir_y
+            pos_player = self._board.get_position(next_pos_x, next_pos_y)
+            if pos_player != player:
+                break
+            pos_x, pos_y = next_pos_x, next_pos_y
+
+        dir_x *= -1
+        dir_y *= -1
+
+        count = 1
+        while True:
+            pos_x += dir_x
+            pos_y += dir_y
+            pos_player = self._board.get_position(pos_x, pos_y)
+            if pos_player != player:
+                break
+            count += 1
+
+        if count >= WIN_STREAK_LEN:
+            return True
+
+        return False
 
 
 def start_game(tui: Tui, board: Board):
